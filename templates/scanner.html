@@ -1,0 +1,996 @@
+{% extends "base.html" %}
+
+{% block title %}AI Market Scanner | NeutraYield AI{% endblock %}
+
+{% block extra_head %}
+<meta name="description"
+    content="NeutraYield AI Market Scanner - Real-time AI-powered trading signals for BNB Chain with MetaMask wallet signing.">
+{% endblock %}
+
+{% block content %}
+<div class="scanner-page">
+    <!-- Header -->
+    <div class="scanner-header">
+        <div class="scanner-header-content">
+            <div class="scanner-title-group">
+                <div class="scanner-icon-pulse">
+                    <span class="scanner-icon">🧠</span>
+                    <span class="pulse-ring"></span>
+                </div>
+                <div>
+                    <h1>AI Market Scanner</h1>
+                    <p class="scanner-subtitle">Real-time market analysis powered by Groq LLM on <span
+                            class="bnb-badge">BNB Chain</span></p>
+                </div>
+            </div>
+            <div class="auto-refresh-indicator" id="refreshIndicator">
+                <span class="refresh-dot"></span>
+                <span id="refreshCountdown">Auto-refresh in 10s</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="scanner-grid">
+        <!-- Left Column: Data + Scanner -->
+        <div class="scanner-main">
+
+            <!-- Scan Controls -->
+            <div class="glass-pane scanner-controls-panel">
+                <div class="scan-controls-row">
+                    <button class="btn btn-scan" id="scanMarketBtn">
+                        <span class="scan-btn-icon">⚡</span>
+                        <span class="scan-btn-text">Scan Market</span>
+                        <span class="scan-btn-loading" style="display: none;">
+                            <span class="spinner"></span> Analyzing...
+                        </span>
+                    </button>
+                    <div class="scan-meta">
+                        <div class="scan-meta-item">
+                            <span class="meta-label">Dataset</span>
+                            <span class="meta-value" id="datasetCount">100 rows</span>
+                        </div>
+                        <div class="scan-meta-item">
+                            <span class="meta-label">Engine</span>
+                            <span class="meta-value">Groq LLM + Rules</span>
+                        </div>
+                        <div class="scan-meta-item">
+                            <span class="meta-label">Chain</span>
+                            <span class="meta-value bnb-text">BNB Chain</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signal Card -->
+            <div class="signal-card-wrapper" id="signalCardWrapper" style="display: none;">
+                <div class="glass-pane signal-card" id="signalCard">
+                    <div class="signal-header">
+                        <h3>Trading Signal</h3>
+                        <span class="signal-timestamp" id="signalTimestamp"></span>
+                    </div>
+                    <div class="signal-body">
+                        <div class="signal-main-display">
+                            <div class="signal-badge-large" id="signalBadge">BUY</div>
+                            <div class="signal-metrics">
+                                <div class="confidence-section">
+                                    <span class="confidence-label">Confidence</span>
+                                    <div class="confidence-bar-container">
+                                        <div class="confidence-bar" id="confidenceBar" style="width: 0%"></div>
+                                    </div>
+                                    <span class="confidence-value" id="confidenceValue">0%</span>
+                                </div>
+                                <div class="risk-section">
+                                    <span class="risk-label">Risk Level</span>
+                                    <span class="risk-badge" id="riskBadge">Moderate</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="signal-factors" id="signalFactors">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LLM Explanation Panel -->
+                <div class="glass-pane llm-panel" id="llmPanel">
+                    <div class="llm-header">
+                        <span class="llm-icon">🤖</span>
+                        <h4>AI Analysis <span class="llm-badge">Groq LLM</span></h4>
+                    </div>
+                    <div class="llm-explanation" id="llmExplanation">
+                        <!-- Populated dynamically -->
+                    </div>
+                    <div class="llm-risk-summary" id="llmRiskSummary">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Quantitative Strategy Instructions -->
+                <div class="glass-pane quant-instructions-panel" id="quantInstructionsPanel" style="display: none;">
+                    <div class="quant-header">
+                        <span class="quant-icon">📊</span>
+                        <h4>Strategy Instructions <span class="llm-badge">Quant AI</span></h4>
+                    </div>
+                    <div class="quant-instructions" id="quant-instructions">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Trade Action Buttons -->
+                <div class="glass-pane trade-actions-panel" id="tradeActionsPanel">
+                    <h4>Prepare Trade on BNB Chain <span class="bnb-badge" style="font-size: 0.65rem;">Testnet</span>
+                    </h4>
+                    <p class="wallet-requirement-note" id="walletNote">
+                        🦊 Connect your MetaMask wallet to execute trades. All transactions require wallet signature.
+                    </p>
+                    <div class="trade-buttons-row">
+                        <button class="btn trade-btn trade-btn-buy" id="tradeBuy" data-action="BUY">
+                            <span class="trade-btn-icon">📈</span> Prepare Buy
+                        </button>
+                        <button class="btn trade-btn trade-btn-sell" id="tradeSell" data-action="SELL">
+                            <span class="trade-btn-icon">📉</span> Prepare Sell
+                        </button>
+                        <button class="btn trade-btn trade-btn-stop" id="tradeStop" data-action="STOP">
+                            <span class="trade-btn-icon">🛑</span> Prepare Stop
+                        </button>
+                        <button class="btn trade-btn trade-btn-limit" id="tradeLimit" data-action="LIMIT">
+                            <span class="trade-btn-icon">📊</span> Prepare Limit
+                        </button>
+                    </div>
+                    <div class="trade-execution-result" id="tradeResult" style="display: none;">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Data Table -->
+            <div class="glass-pane market-data-panel">
+                <div class="data-table-header">
+                    <h3>Live Market Data</h3>
+                    <div class="data-table-controls">
+                        <span class="data-refresh-pulse" id="dataRefreshPulse"></span>
+                        <span class="data-update-label" id="dataUpdateLabel">Waiting for data...</span>
+                        <div class="pagination-controls">
+                            <button class="btn btn-sm btn-outline" id="prevPage" disabled>← Prev</button>
+                            <span class="page-info" id="pageInfo">Page 1/5</span>
+                            <button class="btn btn-sm btn-outline" id="nextPage">Next →</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-table-wrapper">
+                    <table class="scanner-table" id="marketDataTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Timestamp</th>
+                                <th>Price</th>
+                                <th>Volume</th>
+                                <th>RSI</th>
+                                <th>MACD</th>
+                                <th>Volatility</th>
+                                <th>Funding Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="marketDataBody">
+                            <tr>
+                                <td colspan="8" class="loading-cell">
+                                    <span class="spinner"></span> Loading market data...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: AI Chat + Trade History -->
+        <div class="scanner-sidebar">
+
+            <!-- Ask AI About Signal -->
+            <div class="glass-pane ai-chat-panel">
+                <div class="ai-chat-header">
+                    <div class="ai-online-dot"></div>
+                    <h4>Ask AI About This Signal</h4>
+                </div>
+                <div class="ai-chat-messages" id="scannerChatMessages">
+                    <div class="message ai">
+                        I'm your NeutraYield AI trading assistant. Scan the market first, then ask me anything about the
+                        signal, risk, or strategy.
+                    </div>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="scannerChatInput"
+                        placeholder='e.g. "Why not Sell?" or "What is downside risk?"'>
+                    <button class="btn btn-primary btn-sm" id="scannerChatSend">Ask</button>
+                </div>
+                <div class="quick-questions">
+                    <button class="quick-q-btn" data-q="Why not Sell?">Why not Sell?</button>
+                    <button class="quick-q-btn" data-q="What if volatility increases?">Volatility up?</button>
+                    <button class="quick-q-btn" data-q="What is the downside risk?">Downside risk?</button>
+                    <button class="quick-q-btn" data-q="Should I increase position size?">Position size?</button>
+                </div>
+            </div>
+
+            <!-- Trade History -->
+            <div class="glass-pane trade-history-panel">
+                <div class="trade-history-header">
+                    <h4>Trade Execution History</h4>
+                    <span class="trade-count-badge" id="tradeCountBadge">0</span>
+                </div>
+                <div class="trade-history-table-wrapper">
+                    <table class="trade-history-table" id="tradeHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Action</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Tx Hash</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradeHistoryBody">
+                            <!-- Populated via JS from API -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trade Confirmation Modal -->
+<div class="modal-overlay" id="tradeConfirmModal" style="display: none;">
+    <div class="modal-card trade-confirm-modal">
+        <div class="modal-icon" id="tradeModalIcon">📈</div>
+        <h3 id="tradeModalTitle">Confirm Trade</h3>
+        <div class="trade-confirm-details">
+            <div class="confirm-row">
+                <span class="confirm-label">Signal</span>
+                <span class="confirm-value" id="confirmSignal">BUY</span>
+            </div>
+            <div class="confirm-row">
+                <span class="confirm-label">Confidence</span>
+                <span class="confirm-value" id="confirmConfidence">82%</span>
+            </div>
+            <div class="confirm-row">
+                <span class="confirm-label">Risk Level</span>
+                <span class="confirm-value" id="confirmRisk">Moderate</span>
+            </div>
+            <div class="confirm-row">
+                <span class="confirm-label">Estimated Gas</span>
+                <span class="confirm-value" id="confirmGas">~21,000</span>
+            </div>
+            <div class="confirm-row">
+                <span class="confirm-label">Value</span>
+                <span class="confirm-value">0.001 tBNB</span>
+            </div>
+            <div class="confirm-row">
+                <span class="confirm-label">Network</span>
+                <span class="confirm-value bnb-text">BNB Testnet</span>
+            </div>
+        </div>
+        <button class="btn btn-primary" id="confirmWalletBtn" style="width: 100%; margin-top: 1rem;">
+            🦊 Confirm in Wallet
+        </button>
+        <button class="btn btn-outline btn-sm" id="cancelTradeBtn" style="width: 100%; margin-top: 0.5rem;">
+            Cancel
+        </button>
+    </div>
+</div>
+
+<!-- Wallet Pending Overlay -->
+<div class="wallet-pending-overlay" id="walletPendingOverlay" style="display: none;">
+    <div class="wallet-pending-card">
+        <div class="wallet-pending-spinner"></div>
+        <h3>Waiting for Wallet...</h3>
+        <p>Please confirm the transaction in MetaMask</p>
+        <div class="wallet-pending-pulse"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        'use strict';
+
+        // ── State ──
+        const state = {
+            marketData: [],
+            currentPage: 1,
+            rowsPerPage: 20,
+            currentSignal: null,
+            isScanning: false,
+            isExecuting: false,
+            refreshTimer: null,
+            countdown: 10,
+            pendingTrade: null,  // Holds prepare-trade response for confirmation
+        };
+
+        // ── DOM Elements ──
+        const $ = id => document.getElementById(id);
+
+        const scanBtn = $('scanMarketBtn');
+        const signalCardWrapper = $('signalCardWrapper');
+        const signalBadge = $('signalBadge');
+        const confidenceBar = $('confidenceBar');
+        const confidenceValue = $('confidenceValue');
+        const riskBadge = $('riskBadge');
+        const signalFactors = $('signalFactors');
+        const signalTimestamp = $('signalTimestamp');
+        const llmExplanation = $('llmExplanation');
+        const llmRiskSummary = $('llmRiskSummary');
+        const tradeResult = $('tradeResult');
+        const marketDataBody = $('marketDataBody');
+        const pageInfo = $('pageInfo');
+        const prevPage = $('prevPage');
+        const nextPage = $('nextPage');
+        const refreshCountdown = $('refreshCountdown');
+        const dataUpdateLabel = $('dataUpdateLabel');
+        const dataRefreshPulse = $('dataRefreshPulse');
+        const tradeHistoryBody = $('tradeHistoryBody');
+        const tradeCountBadge = $('tradeCountBadge');
+        const walletNote = $('walletNote');
+        const tradeConfirmModal = $('tradeConfirmModal');
+        const walletPendingOverlay = $('walletPendingOverlay');
+
+        // BNB Testnet Explorer
+        const EXPLORER_BASE = 'https://testnet.bscscan.com/tx/';
+
+        // ── CSRF Token ──
+        function getCSRFToken() {
+            const name = 'csrftoken';
+            const cookies = document.cookie.split(';');
+            for (let c of cookies) {
+                c = c.trim();
+                if (c.startsWith(name + '=')) return c.substring(name.length + 1);
+            }
+            return '{{ csrf_token }}';
+        }
+
+        // ── Wallet State Helper ──
+        function getWallet() {
+            return window.NeutraYield?.wallet || { connected: false };
+        }
+
+        function isWalletReady() {
+            const w = getWallet();
+            return w.connected && w.isCorrectNetwork && w.address;
+        }
+
+        // Update wallet note based on state
+        function updateWalletNote() {
+            const w = getWallet();
+            if (!w.connected) {
+                walletNote.innerHTML = '🦊 Connect your MetaMask wallet to execute trades. All transactions require wallet signature.';
+                walletNote.className = 'wallet-requirement-note wallet-not-connected';
+            } else if (!w.isCorrectNetwork) {
+                walletNote.innerHTML = '⚠️ Wrong network! Please switch to <strong>BNB Testnet</strong> to trade.';
+                walletNote.className = 'wallet-requirement-note wallet-wrong-network';
+            } else {
+                walletNote.innerHTML = `✅ Wallet connected: <strong>${w.address.substring(0, 6)}...${w.address.substring(w.address.length - 4)}</strong> on BNB Testnet`;
+                walletNote.className = 'wallet-requirement-note wallet-connected';
+            }
+        }
+
+        // Listen for wallet state changes from main.js
+        window.addEventListener('walletStateChanged', updateWalletNote);
+        updateWalletNote();
+
+        // ── Fetch Market Data ──
+        async function fetchMarketData() {
+            try {
+                const res = await fetch('/api/scanner/generate-market-data/');
+                const json = await res.json();
+                state.marketData = json.data || [];
+                $('datasetCount').textContent = `${state.marketData.length} rows`;
+                renderTable();
+                dataUpdateLabel.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+                dataRefreshPulse.classList.add('pulse-active');
+                setTimeout(() => dataRefreshPulse.classList.remove('pulse-active'), 1000);
+            } catch (e) {
+                console.error('Market data fetch error:', e);
+                dataUpdateLabel.textContent = 'Fetch error';
+            }
+        }
+
+        // ── Render Table ──
+        function renderTable() {
+            const data = state.marketData;
+            if (!data.length) {
+                marketDataBody.innerHTML = '<tr><td colspan="8" class="loading-cell">No data available.</td></tr>';
+                return;
+            }
+            const totalPages = Math.ceil(data.length / state.rowsPerPage);
+            const start = (state.currentPage - 1) * state.rowsPerPage;
+            const end = Math.min(start + state.rowsPerPage, data.length);
+            const slice = data.slice(start, end);
+
+            let html = '';
+            slice.forEach((row, idx) => {
+                const rsiClass = row.rsi < 30 ? 'rsi-oversold' : row.rsi > 70 ? 'rsi-overbought' : '';
+                const macdClass = row.macd > 0 ? 'macd-positive' : 'macd-negative';
+                html += `<tr class="data-row-anim">
+                <td class="row-num">${start + idx + 1}</td>
+                <td class="ts-cell">${row.timestamp.split(' ')[1]}</td>
+                <td class="price-cell">$${row.price.toFixed(2)}</td>
+                <td>${Number(row.volume).toLocaleString()}</td>
+                <td class="${rsiClass}">${row.rsi.toFixed(1)}</td>
+                <td class="${macdClass}">${row.macd.toFixed(4)}</td>
+                <td>${(row.volatility * 100).toFixed(3)}%</td>
+                <td>${(row.funding_rate * 100).toFixed(4)}%</td>
+            </tr>`;
+            });
+            marketDataBody.innerHTML = html;
+
+            pageInfo.textContent = `Page ${state.currentPage}/${totalPages}`;
+            prevPage.disabled = state.currentPage <= 1;
+            nextPage.disabled = state.currentPage >= totalPages;
+        }
+
+        prevPage.onclick = () => { state.currentPage--; renderTable(); };
+        nextPage.onclick = () => { state.currentPage++; renderTable(); };
+
+        // ── Auto-refresh Countdown ──
+        function startCountdown() {
+            state.countdown = 10;
+            if (state.refreshTimer) clearInterval(state.refreshTimer);
+            state.refreshTimer = setInterval(() => {
+                state.countdown--;
+                if (state.countdown <= 0) {
+                    fetchMarketData();
+                    state.countdown = 10;
+                }
+                refreshCountdown.textContent = `Auto-refresh in ${state.countdown}s`;
+            }, 1000);
+        }
+
+        // ── Scan Market ──
+        let scanDebounceTimer = null;
+        scanBtn.onclick = async () => {
+            if (state.isScanning) return;
+            if (scanDebounceTimer) clearTimeout(scanDebounceTimer);
+
+            scanDebounceTimer = setTimeout(async () => {
+                state.isScanning = true;
+                scanBtn.classList.add('scanning');
+                scanBtn.querySelector('.scan-btn-text').style.display = 'none';
+                scanBtn.querySelector('.scan-btn-loading').style.display = 'inline-flex';
+                disableTradeButtons(true);
+
+                try {
+                    const wallet = getWallet();
+                    const res = await fetch('/api/scanner/scan-market/' + (wallet.address ? `?wallet_address=${wallet.address}` : ''), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            wallet_address: wallet.address
+                        })
+                    });
+                    const data = await res.json();
+                    state.currentSignal = data;
+                    displaySignal(data);
+                } catch (e) {
+                    console.error('Scan error:', e);
+                    showToast('Scan failed. Please try again.', 'error');
+                } finally {
+                    state.isScanning = false;
+                    scanBtn.classList.remove('scanning');
+                    scanBtn.querySelector('.scan-btn-text').style.display = 'inline';
+                    scanBtn.querySelector('.scan-btn-loading').style.display = 'none';
+                    disableTradeButtons(false);
+                }
+            }, 300);
+        };
+
+        // ── Display Signal ──
+        function displaySignal(data) {
+            signalCardWrapper.style.display = 'block';
+            signalCardWrapper.classList.add('signal-animate-in');
+
+            signalBadge.textContent = data.signal;
+            signalBadge.className = `signal-badge-large signal-${data.signal.toLowerCase()}`;
+
+            const conf = data.confidence;
+            confidenceBar.style.width = conf + '%';
+            confidenceBar.className = `confidence-bar conf-${conf > 70 ? 'high' : conf > 40 ? 'med' : 'low'}`;
+            confidenceValue.textContent = conf + '%';
+
+            riskBadge.textContent = data.riskLevel;
+            riskBadge.className = `risk-badge risk-${data.riskLevel.toLowerCase()}`;
+
+            signalFactors.innerHTML = (data.factors || []).map(f =>
+                `<span class="factor-chip">${f}</span>`
+            ).join('');
+
+            signalTimestamp.textContent = new Date().toLocaleTimeString();
+
+            llmExplanation.innerHTML = `<p>${escapeHtml(data.explanation || 'No explanation available.')}</p>`;
+
+            if (data.riskSummary) {
+                llmRiskSummary.innerHTML = `<div class="risk-summary-card">
+                <span class="risk-summary-icon">⚠️</span>
+                <p>${escapeHtml(data.riskSummary)}</p>
+            </div>`;
+            }
+
+            // Display Quantitative Strategy Instructions (Hedge, Rotate, Arb)
+            const quantArea = document.getElementById('quant-instructions');
+            const quantPanel = document.getElementById('quantInstructionsPanel');
+            if (data.quant_signals && data.quant_signals.length > 0) {
+                quantArea.innerHTML = '';
+                data.quant_signals.forEach(sig => {
+                    const bg = sig.instruction === 'REBALANCE_NEEDED' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(139, 92, 246, 0.05)';
+                    const accent = sig.instruction === 'REBALANCE_NEEDED' ? '#3b82f6' : '#8b5cf6';
+                    quantArea.innerHTML += `
+                        <div style="padding: 1rem; background: ${bg}; border-radius: 8px; border-left: 3px solid ${accent}; margin-bottom: 0.75rem;">
+                            <div style="font-size: 0.75rem; color: ${accent}; font-weight: bold; margin-bottom: 0.25rem;">PROMPT: ${sig.action || 'OPPORTUNITY'}</div>
+                            <div style="font-size: 0.9rem;">${sig.reason}</div>
+                        </div>
+                    `;
+                });
+                quantPanel.style.display = 'block';
+            } else {
+                quantPanel.style.display = 'none';
+            }
+
+            updateWalletNote();
+            signalCardWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ══════════════════════════════════════════════════════
+        //  TRADE EXECUTION (Wallet-Based)
+        // ══════════════════════════════════════════════════════
+
+        document.querySelectorAll('.trade-btn').forEach(btn => {
+            btn.onclick = async () => {
+                if (state.isExecuting) return;
+                const action = btn.dataset.action;
+
+                // ── Step 1: Check wallet ──
+                if (!isWalletReady()) {
+                    if (!getWallet().connected) {
+                        showToast('Please connect your MetaMask wallet first.', 'error');
+                    } else {
+                        showToast('Please switch to BNB Testnet in MetaMask.', 'error');
+                    }
+                    return;
+                }
+
+                // ── Step 2: Call prepare-trade API ──
+                const wallet = getWallet();
+                try {
+                    const res = await fetch('/api/scanner/prepare-trade/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            action: action,
+                            signal: state.currentSignal ? state.currentSignal.signal : action,
+                            confidence: state.currentSignal ? state.currentSignal.confidence : 50,
+                            wallet_address: wallet.address,
+                        })
+                    });
+                    const prepData = await res.json();
+
+                    if (!prepData.success) {
+                        showToast(prepData.error || 'Failed to prepare trade.', 'error');
+                        return;
+                    }
+
+                    // ── Step 3: Show confirmation modal ──
+                    state.pendingTrade = prepData;
+                    showConfirmModal(prepData);
+
+                } catch (e) {
+                    console.error('Prepare trade error:', e);
+                    showToast('Failed to prepare trade. Check your connection.', 'error');
+                }
+            };
+        });
+
+        // ── Show Confirmation Modal ──
+        const ACTION_ICONS = { BUY: '📈', SELL: '📉', STOP: '🛑', LIMIT: '📊' };
+
+        function showConfirmModal(data) {
+            $('tradeModalIcon').textContent = ACTION_ICONS[data.action] || '📈';
+            $('tradeModalTitle').textContent = `Confirm ${data.action} Trade`;
+            $('confirmSignal').textContent = data.signal;
+            $('confirmSignal').className = `confirm-value signal-text-${data.action.toLowerCase()}`;
+            $('confirmConfidence').textContent = data.confidence + '%';
+            $('confirmRisk').textContent = data.riskLevel;
+            $('confirmGas').textContent = data.estimatedGas;
+            tradeConfirmModal.style.display = 'flex';
+        }
+
+        // Cancel trade
+        $('cancelTradeBtn').onclick = () => {
+            tradeConfirmModal.style.display = 'none';
+            state.pendingTrade = null;
+        };
+
+        // ── Confirm in Wallet (MetaMask signing) ──
+        $('confirmWalletBtn').onclick = async () => {
+            if (!state.pendingTrade || state.isExecuting) return;
+
+            const trade = state.pendingTrade;
+            const wallet = getWallet();
+            const txPayload = trade.txPayload;
+
+            tradeConfirmModal.style.display = 'none';
+
+            // Show pending overlay
+            state.isExecuting = true;
+            disableTradeButtons(true);
+            scanBtn.disabled = true;
+            walletPendingOverlay.style.display = 'flex';
+            tradeResult.style.display = 'none';
+
+            try {
+                // ── Step 4: Send transaction to MetaMask for signing ──
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: txPayload.from,
+                        to: txPayload.to,
+                        value: txPayload.value,
+                    }],
+                });
+
+                // ── Step 5: Transaction signed & sent! ──
+                walletPendingOverlay.style.display = 'none';
+
+                // Record the trade in backend
+                const recordRes = await fetch('/api/scanner/record-trade/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        action: trade.action,
+                        signal: trade.signal,
+                        confidence: trade.confidence,
+                        tx_hash: txHash,
+                        wallet_address: wallet.address,
+                        status: 'Confirmed',
+                        price: trade.price,
+                    })
+                });
+                const recordData = await recordRes.json();
+
+                // Display success
+                displayTradeSuccess(txHash, trade);
+                addTradeToHistory(trade.action, trade.price, 'Confirmed', txHash);
+                showToast(
+                    `${trade.action} confirmed on BNB Chain Testnet!<br>` +
+                    `<a href="${EXPLORER_BASE + txHash}" target="_blank" style="color: var(--accent-color);">View on BscScan ↗</a>`,
+                    'success'
+                );
+
+            } catch (txError) {
+                walletPendingOverlay.style.display = 'none';
+
+                if (txError.code === 4001 || txError.code === 'ACTION_REJECTED') {
+                    // ── User rejected in MetaMask ──
+                    displayTradeCancelled();
+
+                    // Record cancellation
+                    fetch('/api/scanner/record-trade/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            action: trade.action,
+                            signal: trade.signal,
+                            confidence: trade.confidence,
+                            tx_hash: '',
+                            wallet_address: wallet.address,
+                            status: 'Cancelled',
+                            price: trade.price,
+                        })
+                    });
+
+                    showToast('Transaction cancelled by user.', 'error');
+                } else {
+                    // ── Other error ──
+                    displayTradeError({ error: txError.message || 'Transaction failed.', error_type: 'WALLET_ERROR' });
+                    addTradeToHistory(trade.action, trade.price, 'Failed', '');
+
+                    // Record failure
+                    fetch('/api/scanner/record-trade/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            action: trade.action,
+                            signal: trade.signal,
+                            confidence: trade.confidence,
+                            tx_hash: '',
+                            wallet_address: wallet.address,
+                            status: 'Failed',
+                            price: trade.price,
+                            error: txError.message,
+                        })
+                    });
+
+                    showToast(`Transaction failed: ${txError.message || 'Unknown error'}`, 'error');
+                }
+            } finally {
+                state.isExecuting = false;
+                state.pendingTrade = null;
+                disableTradeButtons(false);
+                scanBtn.disabled = false;
+            }
+        };
+
+        function disableTradeButtons(disabled) {
+            document.querySelectorAll('.trade-btn').forEach(b => b.disabled = disabled);
+        }
+
+        // ── Success Receipt ──
+        function displayTradeSuccess(txHash, trade) {
+            const explorerUrl = EXPLORER_BASE + txHash;
+            const shortHash = txHash.substring(0, 10) + '...' + txHash.substring(txHash.length - 6);
+            const wallet = getWallet();
+
+            tradeResult.style.display = 'block';
+            tradeResult.innerHTML = `
+            <div class="execution-receipt execution-receipt-success">
+                <div class="receipt-header">
+                    <span class="receipt-check">✅</span>
+                    <span>Transaction Successful on <strong>BNB Chain</strong> <span class="bnb-badge" style="font-size:0.6rem; margin-left:4px;">Testnet</span></span>
+                </div>
+                <div class="receipt-tx-id">
+                    <span class="receipt-label">Transaction Hash</span>
+                    <a href="${explorerUrl}" target="_blank" rel="noopener" class="tx-id-link">
+                        ${txHash} <span class="external-link-icon">↗</span>
+                    </a>
+                </div>
+                <div class="receipt-grid">
+                    <div class="receipt-item">
+                        <span class="receipt-label">Action</span>
+                        <span class="receipt-value">${trade.action}</span>
+                    </div>
+                    <div class="receipt-item">
+                        <span class="receipt-label">Network</span>
+                        <span class="receipt-value">BSC Testnet</span>
+                    </div>
+                    <div class="receipt-item">
+                        <span class="receipt-label">Wallet</span>
+                        <span class="receipt-value">${wallet.address ? wallet.address.substring(0, 8) + '...' + wallet.address.substring(wallet.address.length - 6) : 'N/A'}</span>
+                    </div>
+                    <div class="receipt-item">
+                        <span class="receipt-label">Value</span>
+                        <span class="receipt-value">0.0001 tBNB</span>
+                    </div>
+                    <div class="receipt-item">
+                        <span class="receipt-label">Signed By</span>
+                        <span class="receipt-value" style="color: var(--success);">MetaMask ✅</span>
+                    </div>
+                    <div class="receipt-item">
+                        <span class="receipt-label">Status</span>
+                        <span class="receipt-value" style="color: var(--success);">Confirmed</span>
+                    </div>
+                </div>
+                <div class="receipt-explorer-btn">
+                    <a href="${explorerUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="width: 100%; text-align: center; text-decoration: none;">
+                        🔗 View on BscScan (Testnet) ↗
+                    </a>
+                </div>
+            </div>`;
+            tradeResult.classList.add('receipt-animate-in');
+        }
+
+        // ── Cancelled Receipt ──
+        function displayTradeCancelled() {
+            tradeResult.style.display = 'block';
+            tradeResult.innerHTML = `
+            <div class="execution-receipt execution-receipt-cancelled">
+                <div class="receipt-header" style="color: var(--warning);">
+                    <span class="receipt-check">🚫</span>
+                    <span>Transaction Cancelled by User</span>
+                </div>
+                <div class="error-details" style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.2);">
+                    <p class="error-message">You rejected the transaction in MetaMask. No trade was executed and no gas was spent.</p>
+                </div>
+            </div>`;
+            tradeResult.classList.add('receipt-animate-in');
+        }
+
+        // ── Error Receipt ──
+        function displayTradeError(data) {
+            const errorMsg = data.error || 'Unknown error occurred.';
+            const errorType = data.error_type || 'UNKNOWN';
+
+            tradeResult.style.display = 'block';
+            tradeResult.innerHTML = `
+            <div class="execution-receipt execution-receipt-error">
+                <div class="receipt-header" style="color: var(--danger);">
+                    <span class="receipt-check">❌</span>
+                    <span>Transaction Failed</span>
+                </div>
+                <div class="error-details">
+                    <div class="error-type-badge">${errorType}</div>
+                    <p class="error-message">${escapeHtml(errorMsg)}</p>
+                </div>
+            </div>`;
+            tradeResult.classList.add('receipt-animate-in');
+        }
+
+        // ══════════════════════════════════════════════════════
+        //  TRADE HISTORY (JS-based, loaded from API)
+        // ══════════════════════════════════════════════════════
+
+        async function loadTradeHistory() {
+            try {
+                const res = await fetch('/api/scanner/trade-history/');
+                const trades = await res.json();
+
+                if (!trades.length) {
+                    tradeHistoryBody.innerHTML = '<tr class="empty-row"><td colspan="5">No trades executed yet.</td></tr>';
+                    tradeCountBadge.textContent = '0';
+                    return;
+                }
+
+                let html = '';
+                trades.forEach(trade => {
+                    const action = trade.executed_action || '—';
+                    const price = trade.price || '—';
+                    const tradeStatus = trade.status || 'Unknown';
+                    const statusClass = tradeStatus === 'Confirmed' ? 'status-confirmed' :
+                        tradeStatus === 'Cancelled' ? 'status-cancelled' :
+                            tradeStatus === 'Pending' ? 'status-pending' : 'status-failed';
+                    const txHash = trade.tx_hash || '';
+                    const time = trade.timestamp ? new Date(trade.timestamp).toLocaleTimeString() : '—';
+
+                    let txCell = '';
+                    if (txHash) {
+                        const shortHash = txHash.substring(0, 10) + '...' + txHash.substring(txHash.length - 4);
+                        const explorerUrl = EXPLORER_BASE + txHash;
+                        txCell = `<a href="${explorerUrl}" target="_blank" rel="noopener" class="tx-hash-link">${shortHash} <span class="external-link-icon">↗</span></a>`;
+                    } else {
+                        txCell = `<span class="tx-hash-empty">—</span>`;
+                    }
+
+                    html += `<tr>
+                        <td>${time}</td>
+                        <td><span class="signal-mini-badge signal-mini-${action.toLowerCase()}">${action}</span></td>
+                        <td>$${price}</td>
+                        <td><span class="status-badge ${statusClass}">${tradeStatus}</span></td>
+                        <td>${txCell}</td>
+                    </tr>`;
+                });
+
+                tradeHistoryBody.innerHTML = html;
+                tradeCountBadge.textContent = trades.length;
+            } catch (e) {
+                console.error('Trade history fetch error:', e);
+                tradeHistoryBody.innerHTML = '<tr class="empty-row"><td colspan="5">Failed to load history.</td></tr>';
+            }
+        }
+
+        // Add trade to history table (client-side, immediate)
+        function addTradeToHistory(action, price, status, txHash) {
+            const emptyRow = tradeHistoryBody.querySelector('.empty-row');
+            if (emptyRow) emptyRow.remove();
+
+            const row = document.createElement('tr');
+            row.className = 'trade-row-anim';
+
+            const statusClass = status === 'Confirmed' ? 'status-confirmed' :
+                status === 'Cancelled' ? 'status-cancelled' : 'status-failed';
+
+            let txCell = '';
+            if (txHash) {
+                const shortHash = txHash.substring(0, 10) + '...' + txHash.substring(txHash.length - 4);
+                const explorerUrl = EXPLORER_BASE + txHash;
+                txCell = `<a href="${explorerUrl}" target="_blank" rel="noopener" class="tx-hash-link">${shortHash} <span class="external-link-icon">↗</span></a>`;
+            } else {
+                txCell = `<span class="tx-hash-empty">—</span>`;
+            }
+
+            row.innerHTML = `
+            <td>${new Date().toLocaleTimeString()}</td>
+            <td><span class="signal-mini-badge signal-mini-${action.toLowerCase()}">${action}</span></td>
+            <td>$${price}</td>
+            <td><span class="status-badge ${statusClass}">${status}</span></td>
+            <td>${txCell}</td>
+        `;
+            tradeHistoryBody.prepend(row);
+
+            const count = tradeHistoryBody.querySelectorAll('tr:not(.empty-row)').length;
+            tradeCountBadge.textContent = count;
+        }
+
+        // ── AI Chat ──
+        const chatInput = $('scannerChatInput');
+        const chatSend = $('scannerChatSend');
+        const chatMessages = $('scannerChatMessages');
+
+        async function sendAIChat(query) {
+            if (!query.trim()) return;
+
+            chatMessages.innerHTML += `<div class="message user">${escapeHtml(query)}</div>`;
+            chatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const loadingId = 'loading-' + Date.now();
+            chatMessages.innerHTML += `<div class="message ai loading" id="${loadingId}"><span class="spinner-sm"></span> Thinking...</div>`;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const signalContext = state.currentSignal
+                    ? `Signal: ${state.currentSignal.signal}, Confidence: ${state.currentSignal.confidence}%, Risk: ${state.currentSignal.riskLevel}`
+                    : '';
+
+                const res = await fetch('/api/scanner/llm-analysis/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        signal_context: signalContext,
+                    })
+                });
+                const data = await res.json();
+                const loader = document.getElementById(loadingId);
+                if (loader) loader.remove();
+
+                chatMessages.innerHTML += `<div class="message ai">${escapeHtml(data.response)}</div>`;
+            } catch (e) {
+                const loader = document.getElementById(loadingId);
+                if (loader) loader.remove();
+                chatMessages.innerHTML += `<div class="message ai" style="color: var(--danger);">AI temporarily unavailable.</div>`;
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        chatSend.onclick = () => sendAIChat(chatInput.value);
+        chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendAIChat(chatInput.value); };
+
+        // Quick questions
+        document.querySelectorAll('.quick-q-btn').forEach(btn => {
+            btn.onclick = () => sendAIChat(btn.dataset.q);
+        });
+
+        // ── Toast Notification ──
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type === 'error' ? 'danger' : 'success'}`;
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; }, 10);
+            setTimeout(() => {
+                toast.style.opacity = '0'; toast.style.transform = 'translateY(20px)';
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+
+        // ── Utility ──
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // ── Init ──
+        fetchMarketData();
+        startCountdown();
+        loadTradeHistory();
+
+    })();
+</script>
+{% endblock %}

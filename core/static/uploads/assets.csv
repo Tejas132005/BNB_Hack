@@ -1,0 +1,4 @@
+asset_id,symbol,type,underlying_reference
+BTC_USDT,BTC,spot,BTC
+ETH_USDT,ETH,spot,ETH
+BNB_USDT,BNB,spot,BNB

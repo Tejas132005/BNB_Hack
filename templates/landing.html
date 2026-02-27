@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}NeutraYield AI - Institutional Yield Automation{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero animate-up">
+    <h1>Automated AI Agents That Generate Market-Neutral Yield</h1>
+    <p>NeutraYield AI leverages advanced LLMs and quantitative engines to capture yield across BNB Chain, Ethereum, and
+        beyond without directional market exposure.</p>
+    <div class="hero-btns">
+        <a href="/dashboard" class="btn btn-primary">Enter Dashboard</a>
+        <button class="btn btn-outline"
+            onclick="document.getElementById('tech').scrollIntoView({behavior: 'smooth'})">How it Works</button>
+    </div>
+</section>
+
+<!-- Performance Overview -->
+<div class="grid-3 animate-up" style="animation-delay: 0.2s;">
+    <div class="glass-pane stat-card">
+        <div class="stat-label">Current Avg. APY</div>
+        <div class="stat-value">24.8%</div>
+        <div style="color: var(--success); font-size: 0.8rem;">↑ 2.1% from last month</div>
+    </div>
+    <div class="glass-pane stat-card">
+        <div class="stat-label">Total Value Locked</div>
+        <div class="stat-value">$1,248,390</div>
+        <div style="color: var(--text-secondary); font-size: 0.8rem;">Institutional liquidity</div>
+    </div>
+    <div class="glass-pane stat-card">
+        <div class="stat-label">Sharpe Ratio</div>
+        <div class="stat-value">3.2</div>
+        <div style="color: var(--success); font-size: 0.8rem;">Risk-adjusted outperformance</div>
+    </div>
+</div>
+
+<!-- Strategy Explanations -->
+<section class="grid-3 animate-up" style="animation-delay: 0.4s;">
+    <div class="glass-pane">
+        <h3>Delta-Neutral</h3>
+        <p style="color: var(--text-secondary); margin-top: 1rem;">Balanced long and short positions to reduce market
+            direction risk. We hedge exposure to remain market-indifferent.</p>
+    </div>
+    <div class="glass-pane">
+        <h3>Yield Rotation</h3>
+        <p style="color: var(--text-secondary); margin-top: 1rem;">AI automatically moves capital to higher-yield
+            opportunities across BNB Chain, Ethereum, and Solana.</p>
+    </div>
+    <div class="glass-pane">
+        <h3>Arbitrage</h3>
+        <p style="color: var(--text-secondary); margin-top: 1rem;">Capturing price differences across decentralized
+            exchanges automatically with sub-second execution.</p>
+    </div>
+</section>
+
+<!-- Technical Architecture -->
+<section id="tech" class="animate-up"
+    style="padding: 4rem 2rem; max-width: 1000px; margin: 0 auto; text-align: center;">
+    <h2 style="margin-bottom: 2rem;">Technical Architecture</h2>
+    <div class="glass-pane" style="text-align: left;">
+        <pre style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; overflow-x: auto; color: #a5d6ff;">
+Frontend (Next.js/Django)
+         ↓
+Backend API (FastAPI/Node)
+         ↓
+Groq LLM (Strategy Planning)
+         ↓
+Strategy Engine (Execution Logic)
+         ↓
+Blockchain Execution Layer (BNB Chain)
+        </pre>
+        <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div>
+                <h4>1. Intelligence Layer</h4>
+                <p style="font-size: 0.9rem; color: var(--text-secondary);">Powered by Groq's Llama-3 models for
+                    real-time risk assessment and strategy reasoning.</p>
+            </div>
+            <div>
+                <h4>2. Execution Layer</h4>
+                <p style="font-size: 0.9rem; color: var(--text-secondary);">Optimized smart contracts on BNB Chain for
+                    non-custodial, high-frequency yield capture.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trust Layer -->
+<section class="grid-3 animate-up">
+    <div class="glass-pane" style="text-align: center;">
+        <span style="font-size: 2rem;">🔒</span>
+        <h4>Non-Custodial</h4>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">Your funds, your keys. NeutraYield never takes
+            custody of your assets.</p>
+    </div>
+    <div class="glass-pane" style="text-align: center;">
+        <span style="font-size: 2rem;">🔍</span>
+        <h4>Audited</h4>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">Smart contracts audited by leading security firms.
+            Transparency at its core.</p>
+    </div>
+    <div class="glass-pane" style="text-align: center;">
+        <span style="font-size: 2rem;">⚡</span>
+        <h4>Flash Liquidity</h4>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">Emergency withdrawal anytime. No lock-up periods for
+            institutional partners.</p>
+    </div>
+</section>
+{% endblock %}

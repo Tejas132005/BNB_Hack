@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | NeutraYield AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Left Column: Portfolio & Controls -->
+    <div class="dashboard-main">
+        <!-- Portfolio Stats -->
+        <div class="stat-grid">
+            <div class="glass-pane stat-card">
+                <div class="stat-label">Total Deposited</div>
+                <div class="stat-value">${{ portfolio.total_deposited|floatformat:2 }}</div>
+            </div>
+            <div class="glass-pane stat-card">
+                <div class="stat-label">Current Balance</div>
+                <div class="stat-value">${{ portfolio.current_balance|floatformat:2 }}</div>
+            </div>
+            <div class="glass-pane stat-card" style="border-left: 2px solid var(--success);">
+                <div class="stat-label">Total P/L</div>
+                <div class="stat-value" style="color: var(--success);">+${{ portfolio.pnl|floatformat:2 }}</div>
+            </div>
+            <div class="glass-pane stat-card">
+                <div class="stat-label">Current APY</div>
+                <div class="stat-value">18.4%</div>
+            </div>
+        </div>
+
+        <!-- Strategy & Risk Control -->
+        <div class="glass-pane" style="margin-bottom: 2rem;">
+            <h3>AI Agent Control Panel</h3>
+            <div class="grid-3" style="padding: 1.5rem 0; grid-template-columns: 1fr 1fr 1fr;">
+                <div class="control-group">
+                    <label>Strategy Mode</label>
+                    <select id="strategyMode">
+                        <option value="CONSERVATIVE">Conservative (Stable Arbitrage)</option>
+                        <option value="MODERATE" selected>Moderate (Delta-Neutral)</option>
+                        <option value="AGGRESSIVE">Aggressive (Yield Rotation)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Risk Tolerance: <span id="riskValue">{{ portfolio.risk_tolerance }}</span>%</label>
+                    <input type="range" id="riskSlider" min="0" max="100" value="{{ portfolio.risk_tolerance }}">
+                </div>
+                <div class="control-group" style="display: flex; align-items: flex-end; gap: 0.5rem;">
+                    <button class="btn btn-primary" style="flex: 1;">Update Agent</button>
+                    <button class="btn btn-danger" style="background: var(--danger); box-shadow: none;">Pause</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cross-Platform Arbitrage Monitoring -->
+        <div class="glass-pane" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Live Monitoring</h3>
+                <span style="color: var(--success); font-size: 0.8rem;">● Live Syncing</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th>Current APR</th>
+                        <th>Liquidity</th>
+                        <th>Risk Score</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="monitoring-body">
+                    <!-- Dynamic Rows -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Charts / Performance -->
+        <div class="glass-pane">
+            <h3>Performance Analysis</h3>
+            <div style="height: 300px; margin-top: 1rem;">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: AI Chat & Logs -->
+    <div class="dashboard-sidebar">
+        <!-- AI Agent Chat -->
+        <div class="glass-pane ai-widget" style="margin-bottom: 2rem;">
+            <div
+                style="display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                <div
+                    style="width: 10px; height: 10px; background: #60a5fa; border-radius: 50%; box-shadow: 0 0 10px #60a5fa;">
+                </div>
+                <h3>Ask NeutraYield AI</h3>
+            </div>
+            <div id="chat-messages">
+                <div class="message ai">
+                    Hello! I am your NeutraYield AI agent. I'm currently monitoring your delta-neutral positions on BNB
+                    Chain. How can I help you today?
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Ask about risks, yield, or rebalancing...">
+                <button id="sendChat" class="btn btn-primary">Send</button>
+            </div>
+        </div>
+
+        <!-- Transparency Log -->
+        <div class="glass-pane" style="max-height: 400px; overflow-y: auto;">
+            <h3>Transparency Feed</h3>
+            <div id="ai-logs" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                {% for log in ai_logs %}
+                <div
+                    style="padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 2px solid var(--primary-color);">
+                    <div style="font-size: 0.7rem; color: var(--text-secondary);">{{ log.timestamp|date:"H:i:s" }} - {{
+                        log.event_type }}</div>
+                    <div style="font-size: 0.85rem; margin-top: 0.25rem;">{{ log.message }}</div>
+                </div>
+                {% empty %}
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">No activity logs yet. AI is scanning...
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Strategy Simulation Modal -->
+<div id="simModal" class="glass-pane"
+    style="position: fixed; bottom: 2rem; left: 2rem; width: 350px; z-index: 1000; display: block;">
+    <h4 style="margin-bottom: 1rem;">Strategy Simulator</h4>
+    <div class="control-group">
+        <label>Investment Amount ($)</label>
+        <input type="number" id="simAmount" value="10000"
+            style="width: 100%; background: #000; color: #fff; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 4px;">
+    </div>
+    <button class="btn btn-outline" style="width: 100%; margin-top: 1rem;" id="runSim">Run Monte Carlo</button>
+    <div id="simResult" style="margin-top: 1rem; font-size: 0.85rem; display: none;">
+        Est. Profit: <span class="accent">$3,420</span> (34.2%) over 12 months.
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Risk Slider Label Update
+    const slider = document.getElementById('riskSlider');
+    const riskVal = document.getElementById('riskValue');
+    slider.oninput = function () {
+        riskVal.innerHTML = this.value;
+    }
+
+    // Performance Chart Initialized with empty data
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    const performanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Portfolio Value ($)',
+                data: [],
+                borderColor: '#3b82f6',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(59, 130, 246, 0.1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false } },
+                x: { grid: { display: false }, border: { display: false } }
+            }
+        }
+    });
+
+    // Fetch Real Monitoring Data
+    async function updateMonitoring() {
+        try {
+            const res = await fetch('/api/agent/monitoring_data/');
+            const data = await res.json();
+            const body = document.getElementById('monitoring-body');
+            body.innerHTML = '';
+            data.forEach(row => {
+                body.innerHTML += `
+                    <tr>
+                        <td>${row.platform}</td>
+                        <td style="color: var(--success);">$${row.price}</td>
+                        <td>${row.timestamp}</td>
+                        <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">Active</span></td>
+                        <td><button class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 0.7rem;">Arbitrage</button></td>
+                    </tr>
+                `;
+            });
+        } catch (e) {
+            console.error("Monitoring update failed", e);
+        }
+    }
+
+    // Fetch Dashboard Metrics
+    async function fetchDashboardMetrics() {
+        const wallet = window.NeutraYield?.wallet?.address || '0x0';
+        try {
+            const res = await fetch(`/api/agent/dashboard_metrics/?wallet=${wallet}`);
+            const data = await res.json();
+
+            // Update Stats
+            if (data.equity) {
+                document.querySelectorAll('.stat-value')[1].innerText = `$${data.equity.toLocaleString()}`;
+                document.querySelectorAll('.stat-value')[2].innerText = `+${data.win_rate}% Win`;
+            }
+
+            // Update Chart
+            performanceChart.data.labels = data.equity_curve.map((_, i) => `T${i}`);
+            performanceChart.data.datasets[0].data = data.equity_curve;
+            performanceChart.update();
+
+        } catch (e) {
+            console.error("Metrics update failed", e);
+        }
+    }
+
+    // Set Intervals
+    setInterval(updateMonitoring, 10000);
+    setInterval(fetchDashboardMetrics, 10000);
+    updateMonitoring();
+    fetchDashboardMetrics();
+
+    // AI Chat Interactivity
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendChat');
+    const chatBox = document.getElementById('chatMessages');
+
+    async function sendToAI() {
+        const query = chatInput.value;
+        if (!query) return;
+
+        const chatContainer = document.getElementById('chat-messages');
+        chatContainer.innerHTML += `<div class="message user">${query}</div>`;
+        chatInput.value = '';
+
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        try {
+            const res = await fetch('/api/ai/chat/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ query: query })
+            });
+            const data = await res.json();
+            chatContainer.innerHTML += `<div class="message ai">${data.response}</div>`;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        } catch (e) {
+            chatContainer.innerHTML += `<div class="message ai" style="color: var(--danger);">System error. AI offline.</div>`;
+        }
+    }
+
+    sendBtn.onclick = sendToAI;
+    chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendToAI(); };
+
+    // Simulator
+    document.getElementById('runSim').onclick = async () => {
+        const amount = document.getElementById('simAmount').value;
+        const res = await fetch('/api/agent/simulate/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ amount })
+        });
+        const data = await res.json();
+        const resultDiv = document.getElementById('simResult');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `Est. Profit: <span class="accent">$${data.pnl.toFixed(2)}</span> (${data.performance}) over 12 months.`;
+    }; 
+</script>
+{% endblock %}

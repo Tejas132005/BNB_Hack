@@ -1,0 +1,10 @@
+django
+djangorestframework
+groq
+python-dotenv
+requests
+pandas
+numpy
+web3
+asgiref
+django-cors-headers

@@ -1,0 +1,134 @@
+[
+    {
+        "id": "bnb_target_2026",
+        "name": "Will BNB reach $1000 in 2026?",
+        "markets": [
+            {
+                "name": "Polymarket",
+                "yes": 0.52,
+                "no": 0.48,
+                "liquidity": 15000
+            },
+            {
+                "name": "Azuro",
+                "yes": 0.48,
+                "no": 0.52,
+                "liquidity": 12000
+            },
+            {
+                "name": "DEX_Aggregator",
+                "yes": 0.55,
+                "no": 0.45,
+                "liquidity": 25000
+            },
+            {
+                "name": "Internal_Vault",
+                "yes": 0.50,
+                "no": 0.50,
+                "liquidity": 10000
+            },
+            {
+                "name": "BSC_Pool_1",
+                "yes": 0.47,
+                "no": 0.53,
+                "liquidity": 8000
+            },
+            {
+                "name": "BSC_Pool_2",
+                "yes": 0.58,
+                "no": 0.42,
+                "liquidity": 35000
+            },
+            {
+                "name": "PancakeSwap_v3",
+                "yes": 0.53,
+                "no": 0.47,
+                "liquidity": 20000
+            },
+            {
+                "name": "Bitget_Predict",
+                "yes": 0.49,
+                "no": 0.51,
+                "liquidity": 11000
+            },
+            {
+                "name": "Gateio_Markets",
+                "yes": 0.56,
+                "no": 0.44,
+                "liquidity": 18000
+            },
+            {
+                "name": "Bybit_DEX",
+                "yes": 0.45,
+                "no": 0.55,
+                "liquidity": 9500
+            }
+        ]
+    },
+    {
+        "id": "eth_shanghai_v2",
+        "name": "Ethereum 2026 Upgrade Success?",
+        "markets": [
+            {
+                "name": "Polymarket",
+                "yes": 0.75,
+                "no": 0.25,
+                "liquidity": 50000
+            },
+            {
+                "name": "DEX_Pool",
+                "yes": 0.72,
+                "no": 0.28,
+                "liquidity": 30000
+            },
+            {
+                "name": "Limit_Order_Book",
+                "yes": 0.78,
+                "no": 0.22,
+                "liquidity": 15000
+            },
+            {
+                "name": "Flash_Liquidity",
+                "yes": 0.68,
+                "no": 0.32,
+                "liquidity": 5000
+            },
+            {
+                "name": "Balancer_Vault",
+                "yes": 0.81,
+                "no": 0.19,
+                "liquidity": 42000
+            },
+            {
+                "name": "Curve_Prediction",
+                "yes": 0.70,
+                "no": 0.30,
+                "liquidity": 60000
+            },
+            {
+                "name": "Uniswap_v4_Hook",
+                "yes": 0.76,
+                "no": 0.24,
+                "liquidity": 25000
+            },
+            {
+                "name": "Base_Mainnet_DEX",
+                "yes": 0.74,
+                "no": 0.26,
+                "liquidity": 22000
+            },
+            {
+                "name": "Pulse_Predict",
+                "yes": 0.85,
+                "no": 0.15,
+                "liquidity": 12000
+            },
+            {
+                "name": "Arbitrum_Arbi",
+                "yes": 0.73,
+                "no": 0.27,
+                "liquidity": 19000
+            }
+        ]
+    }
+]

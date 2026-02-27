@@ -1,0 +1,3 @@
+market_id,name,type,chain,fee_rate
+BINANCE,Binance,CEX,None,0.001
+PANCAKE,PancakeSwap,DEX,BNB,0.0025

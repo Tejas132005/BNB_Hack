@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NeutraYield AI - Institutional Web3 Trading{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">▲</span>
+                <span class="logo-text">NeutraYield <span class="accent">AI</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/scanner">AI Scanner</a>
+                <div class="wallet-section" id="walletSection">
+                    <div class="network-badge" id="networkBadge" style="display: none;">
+                        <span class="network-dot"></span>
+                        <span id="networkName">BNB Testnet</span>
+                    </div>
+                    <button id="connectWallet" class="btn btn-wallet">
+                        <span class="wallet-icon">🦊</span>
+                        <span id="walletBtnText">Connect Wallet</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Wrong Network Modal -->
+    <div class="modal-overlay" id="networkModal" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-icon">⚠️</div>
+            <h3>Wrong Network Detected</h3>
+            <p>Please switch to <strong>BNB Chain Testnet</strong> to use NeutraYield AI.</p>
+            <button class="btn btn-primary" id="switchNetworkBtn" style="width: 100%; margin-top: 1rem;">
+                🔄 Switch to BNB Testnet
+            </button>
+            <button class="btn btn-outline btn-sm" id="closeNetworkModal" style="width: 100%; margin-top: 0.5rem;">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 NeutraYield AI. Built for BNB Hackathon. Institutional Grade Markets.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>
