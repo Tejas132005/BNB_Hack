@@ -10,3 +10,4 @@ asgiref
 django-cors-headers
 python-telegram-bot>=20.0
 whitenoise
+gunicorn
