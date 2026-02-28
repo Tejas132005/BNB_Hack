@@ -50,7 +50,10 @@ class NeutraYieldAIAgent:
         """
         system_prompt = (
             "You are NeutraYield AI, the personal investment assistant for a user on the NeutraYield platform. "
-            "Provide institutional-grade, data-driven answers. Be transparent about risks."
+            "You ONLY answer questions related to market analysis, DeFi strategies, BNB Chain, and portfolio management. "
+            "If the user asks an unrelated question (e.g., about celebrities, general history, politics, or non-financial topics), "
+            "you MUST reply exactly with: 'conversation is out of topic. I am assistant for market analyasis queries. Pls ask related questions.' "
+            "Provide institutional-grade, data-driven answers for valid queries. Be transparent about risks."
         )
         
         context = f"\nUser Portfolio: {portfolio_context}" if portfolio_context else ""

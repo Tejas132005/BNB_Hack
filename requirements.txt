@@ -8,3 +8,5 @@ numpy
 web3
 asgiref
 django-cors-headers
+python-telegram-bot>=20.0
+whitenoise

@@ -119,3 +119,9 @@ REST_FRAMEWORK = {
 
 # API Keys
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
+
+# Telegram Bot
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+
+# Web Base URL (for Telegram bot trade execution links)
+WEB_BASE_URL = os.environ.get('WEB_BASE_URL', 'http://127.0.0.1:8000')

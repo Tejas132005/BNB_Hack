@@ -197,28 +197,92 @@
         }
     }
 
-    // Fetch Dashboard Metrics
+    // ── Update Dashboard Metrics (Dynamic) ──
     async function fetchDashboardMetrics() {
         const wallet = window.NeutraYield?.wallet?.address || '0x0';
         try {
             const res = await fetch(`/api/agent/dashboard_metrics/?wallet=${wallet}`);
             const data = await res.json();
 
-            // Update Stats
+            const statCards = document.querySelectorAll('.stat-card');
+
+            // Total Deposited (Assume 10k base for demo)
+            statCards[0].querySelector('.stat-value').innerText = `$10,000.00`;
+
+            // Current Balance
             if (data.equity) {
-                document.querySelectorAll('.stat-value')[1].innerText = `$${data.equity.toLocaleString()}`;
-                document.querySelectorAll('.stat-value')[2].innerText = `+${data.win_rate}% Win`;
+                statCards[1].querySelector('.stat-value').innerText = `$${data.equity.toLocaleString()}`;
             }
 
+            // Total P/L (Net Equity - Deposited)
+            const pnl = (data.equity - 10000);
+            const pnlEl = statCards[2].querySelector('.stat-value');
+            pnlEl.innerText = `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`;
+            pnlEl.style.color = pnl >= 0 ? 'var(--success)' : 'var(--danger)';
+
+            // Current APY / Win Rate
+            statCards[3].querySelector('.stat-label').innerText = "Win Rate";
+            statCards[3].querySelector('.stat-value').innerText = `${data.win_rate}%`;
+
             // Update Chart
-            performanceChart.data.labels = data.equity_curve.map((_, i) => `T${i}`);
-            performanceChart.data.datasets[0].data = data.equity_curve;
-            performanceChart.update();
+            if (data.equity_curve && data.equity_curve.length > 0) {
+                performanceChart.data.labels = data.equity_curve.map((_, i) => `T${i}`);
+                performanceChart.data.datasets[0].data = data.equity_curve;
+                performanceChart.update();
+            }
 
         } catch (e) {
             console.error("Metrics update failed", e);
         }
     }
+
+    // ── Agent Controls (Button Logic) ──
+    const updateAgentBtn = document.querySelector('.btn-primary'); // Update Agent button
+    const pauseAgentBtn = document.querySelector('.btn-danger'); // Pause button
+
+    updateAgentBtn.onclick = async () => {
+        const wallet = window.NeutraYield?.wallet?.address || '0x0';
+        const mode = strategySelect.value;
+        const risk = slider.value;
+
+        updateAgentBtn.disabled = true;
+        updateAgentBtn.innerText = 'Updating...';
+
+        try {
+            const res = await fetch('/api/agent/update-agent/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ wallet, mode, risk })
+            });
+            if (res.ok) {
+                const toast = document.createElement('div');
+                toast.className = 'toast toast-success';
+                toast.innerText = `AI Agent Updated: ${mode} strategy active.`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        } catch (e) {
+            console.error("Agent update failed", e);
+        } finally {
+            updateAgentBtn.disabled = false;
+            updateAgentBtn.innerText = 'Update Agent';
+        }
+    };
+
+    pauseAgentBtn.onclick = async () => {
+        const wallet = window.NeutraYield?.wallet?.address || '0x0';
+        try {
+            await fetch('/api/agent/pause-agent/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ wallet })
+            });
+            pauseAgentBtn.innerText = 'Agent Paused';
+            pauseAgentBtn.style.background = '#666';
+        } catch (e) {
+            console.error("Pause failed", e);
+        }
+    };
 
     // Set Intervals
     setInterval(updateMonitoring, 10000);
@@ -229,16 +293,14 @@
     // AI Chat Interactivity
     const chatInput = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendChat');
-    const chatBox = document.getElementById('chatMessages');
+    const chatContainer = document.getElementById('chat-messages');
 
     async function sendToAI() {
         const query = chatInput.value;
         if (!query) return;
 
-        const chatContainer = document.getElementById('chat-messages');
         chatContainer.innerHTML += `<div class="message user">${query}</div>`;
         chatInput.value = '';
-
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
         try {
@@ -248,7 +310,7 @@
                 body: JSON.stringify({ query: query })
             });
             const data = await res.json();
-            chatContainer.innerHTML += `<div class="message ai">${data.response}</div>`;
+            chatContainer.innerHTML += `<div class="message ai">${data.response || data.analysis}</div>`;
             chatContainer.scrollTop = chatContainer.scrollHeight;
         } catch (e) {
             chatContainer.innerHTML += `<div class="message ai" style="color: var(--danger);">System error. AI offline.</div>`;
@@ -258,18 +320,62 @@
     sendBtn.onclick = sendToAI;
     chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendToAI(); };
 
-    // Simulator
-    document.getElementById('runSim').onclick = async () => {
-        const amount = document.getElementById('simAmount').value;
-        const res = await fetch('/api/agent/simulate/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-            body: JSON.stringify({ amount })
-        });
-        const data = await res.json();
-        const resultDiv = document.getElementById('simResult');
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `Est. Profit: <span class="accent">$${data.pnl.toFixed(2)}</span> (${data.performance}) over 12 months.`;
-    }; 
+    // Simulator (Fixed & Enhanced)
+    const runSimBtn = document.getElementById('runSim');
+    const simAmountInput = document.getElementById('simAmount');
+    const resultDiv = document.getElementById('simResult');
+    const strategySelect = document.getElementById('strategyMode');
+
+    runSimBtn.onclick = async () => {
+        const amount = simAmountInput.value || 10000;
+        const mode = strategySelect.value;
+
+        runSimBtn.innerHTML = '<span class="spinner"></span> Simulating...';
+        runSimBtn.disabled = true;
+        resultDiv.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/agent/simulate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ amount: amount, mode: mode })
+            });
+
+            if (!res.ok) throw new Error("Simulation failed");
+
+            const data = await res.json();
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Est. Profit</span>
+                        <span class="accent" style="font-weight: bold;">$${data.pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+                        <span>12-Mo Yield</span>
+                        <span style="color: var(--success);">${data.performance}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+                        <span>Sharpe Ratio</span>
+                        <span>${data.sharpe}</span>
+                    </div>
+                    <p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.5rem; font-style: italic;">
+                        ${data.confidence}
+                    </p>
+                </div>
+            `;
+        } catch (e) {
+            console.error("Simulation failed:", e);
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<span style="color: var(--danger);">Failed to calculate simulation. Check console.</span>';
+        } finally {
+            runSimBtn.innerHTML = 'Run Simulation';
+            runSimBtn.disabled = false;
+        }
+    };
 </script>
 {% endblock %}

@@ -54,9 +54,9 @@ class MarketDataEngine:
             price_change = price * momentum
             price = max(price + price_change, 100)  # Floor at 100
 
-            # Volume: correlated with abs price change
-            vol_spike = 1.0 + abs(momentum) * 50
-            volume = max(50000, volume * random.uniform(0.85, 1.15) * vol_spike)
+            # Volume: correlated with abs price change, no longer compounding exponentially
+            vol_spike = 1.0 + abs(momentum) * 100
+            volume = max(50000, self.base_volume * random.uniform(0.6, 1.4) * vol_spike)
 
             # RSI: bounded [0, 100], mean-reverting around 50
             rsi_drift = random.gauss(0, 3)
